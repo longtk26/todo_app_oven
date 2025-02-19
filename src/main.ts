@@ -7,6 +7,10 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.useLogger(app.get(LoggerPino));
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, () => {
+    // Using pino logger
+    app.get(LoggerPino).log('App is running on port ' + process.env.PORT);
+  });
 }
+
 bootstrap();

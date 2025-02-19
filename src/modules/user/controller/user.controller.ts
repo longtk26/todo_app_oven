@@ -8,8 +8,8 @@ export class UserController {
   constructor(private readonly userService: UserSerivce) {}
 
   @Get()
-  getUsers(@Res() res: Response) {
-    const data = this.userService.getUsers();
+  async getUsers(@Res() res: Response) {
+    const data = await this.userService.getUsers();
     new SuccessResponse({
       status: HttpStatus.OK,
       message: 'Users found',

@@ -63,14 +63,14 @@ $ npm run test:cov
 1. Using ConfigService in `@nestjs/config` library
 
 ### Setup response
+1. Setup success response
+2. Setup error response
 
 ### Setup Logger
 Using `nestjs-pino` library
 
 ### Setup database, redis
 Using prisma with postgresql
-
-### Setup exception
 
 ### Setup worker
 

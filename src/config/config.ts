@@ -4,12 +4,15 @@ const config = () => ({
     database: {
         postgresUri: process.env.POSTGRES_URI,
     },
-    redis: {},
+    redis: {
+        redisUri: process.env.REDIS_URI,
+    },
 })
 
 export enum ConfigEnum {
     PORT = "port",
     DATABASE_CONFIG = "database",
+    REDIS_CONFIG = "redis",
     ENV = "env"
 }
 
