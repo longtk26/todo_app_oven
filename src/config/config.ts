@@ -7,13 +7,18 @@ const config = () => ({
     redis: {
         redisUri: process.env.REDIS_URI,
     },
+    broker: {
+        host: process.env.BROKER_HOST,
+        port: process.env.BROKER_PORT,
+    }
 })
 
 export enum ConfigEnum {
     PORT = "port",
     DATABASE_CONFIG = "database",
     REDIS_CONFIG = "redis",
-    ENV = "env"
+    ENV = "env",
+    BROKER_CONFIG = "broker"
 }
 
 export default config;

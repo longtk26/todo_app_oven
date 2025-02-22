@@ -5,6 +5,7 @@ import config from './config/config';
 import { LoggerModule } from 'nestjs-pino';
 import { specConfigsPino } from './config/logger';
 import { RedisModule } from './core/cache/redis.module';
+import { WorkerModule } from './worker/worker.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { RedisModule } from './core/cache/redis.module';
     LoggerModule.forRoot(specConfigsPino),
     UserModule,
     RedisModule,
+    WorkerModule,
   ],
 })
 export class AppModule {}
