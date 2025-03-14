@@ -5,7 +5,7 @@ import { BrokerConfig } from 'src/config/interface';
 import { ConfigEnum } from 'src/config/config';
 import { registerWorkerQueues } from './worker.queues';
 import { WorkerProducer } from './worker.producer';
-import { EmailConsumer } from 'src/consumers/email.consumer';
+import { EmailConsumer } from 'src/worker/consumers/email.consumer';
 
 @Module({
   imports: [
