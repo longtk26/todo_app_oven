@@ -8,6 +8,7 @@ import { RedisModule } from './core/cache/redis.module';
 import { WorkerModule } from './worker/worker.module';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './core/response/http-exception.response';
+import { TaskModule } from './modules/tasks/task.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HttpExceptionFilter } from './core/response/http-exception.response';
     }),
     LoggerModule.forRoot(specConfigsPino),
     UserModule,
+    TaskModule,
     RedisModule,
     WorkerModule,
   ],
