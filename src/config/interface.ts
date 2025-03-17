@@ -1,12 +1,12 @@
 export interface DatabaseConfig {
-    postgresUri: string;
+  postgresUri: string;
 }
 
 export interface RedisConfig {
-    redisUri: string;
+  redisUri: string;
 }
 
 export interface BrokerConfig {
-    host: string;
-    port: string;
+  host: string;
+  port: string;
 }

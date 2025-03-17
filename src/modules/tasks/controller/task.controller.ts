@@ -3,7 +3,7 @@ import { SuccessResponse } from 'src/core/response/success.response';
 import { Response } from 'express';
 
 @Controller('task')
-export class UserController {
+export class TaskController {
   constructor() {}
 
   @Get()
