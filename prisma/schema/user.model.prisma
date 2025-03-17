@@ -1,10 +1,10 @@
-
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
+  id        String  @id @default(uuid()) // Unique identifier
+  name      String  
+  email     String  @unique // Ensure unique emails
+  password  String  // Hashed password storage
+  tasks     Task[]  // One-to-many relation with Task
+  createdAt DateTime @default(now()) 
   updatedAt DateTime @updatedAt
 
   @@map("users")

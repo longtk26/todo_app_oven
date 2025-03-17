@@ -1,0 +1,27 @@
+model Task {
+  id          String   @id @default(uuid()) // Unique identifier
+  title       String  
+  description String?  // Optional field
+  status      Status   @default(PENDING) // Enum for task status
+  priority    Priority @default(MEDIUM) // Enum for priority
+  dueDate     DateTime? // Optional due date
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   // Foreign key
+  createdAt   DateTime @default(now()) 
+  updatedAt   DateTime @updatedAt
+
+  @@map("tasks")
+}
+
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}

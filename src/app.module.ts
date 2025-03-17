@@ -6,6 +6,8 @@ import { LoggerModule } from 'nestjs-pino';
 import { specConfigsPino } from './config/logger';
 import { RedisModule } from './core/cache/redis.module';
 import { WorkerModule } from './worker/worker.module';
+import { APP_FILTER } from '@nestjs/core';
+import { HttpExceptionFilter } from './core/response/http-exception.response';
 
 @Module({
   imports: [
@@ -17,6 +19,12 @@ import { WorkerModule } from './worker/worker.module';
     UserModule,
     RedisModule,
     WorkerModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
   ],
 })
 export class AppModule {}

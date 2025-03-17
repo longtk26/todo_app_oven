@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 class ErrorException extends HttpException {
   statusCode: number;
@@ -28,8 +28,8 @@ class ForbiddenException extends ErrorException {
 }
 
 export {
-    ErrorException,
-    BadRequestException,
-    UnauthorizedException,
-    ForbiddenException,
-}
+  ErrorException,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+};

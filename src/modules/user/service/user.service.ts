@@ -1,44 +1,87 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { RedisClient } from 'src/core/cache/redis';
-import { PrismaService } from 'src/core/orm/prisma';
-import { WorkerProducer } from 'src/worker/worker.producer';
-import { WorkerQueuesEnum } from 'src/worker/worker.queues';
+import { CreateUserDTO, SignInDTO } from '../dto/user.dto';
+import { UserRepository } from '../repository/user.repository';
+import {
+  comparePassword,
+  hashPassword,
+} from 'src/core/security/passwd.security';
+import { ConfigService } from '@nestjs/config';
+import { createAccessAndRefreshToken } from 'src/core/security/jwt.security';
+import { ConfigEnum } from 'src/config/config';
+import {
+  BadRequestException,
+  UnauthorizedException,
+} from 'src/core/response/error.response';
 
 @Injectable()
 export class UserSerivce {
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly redisClient: RedisClient,
+    private readonly userRepository: UserRepository,
+    private readonly config: ConfigService,
     private readonly logger: PinoLogger,
-    private readonly workerProducer: WorkerProducer,
   ) {
     this.logger.setContext(UserSerivce.name);
   }
-  async getUsers() {
-    // Get users from cache
-    const users = await this.redisClient.get('user');
-    if (users) {
-      this.logger.info('===Get users from cache===');
-      return users;
+
+  async createUser(createUserDto: CreateUserDTO) {
+    // Step 1: Check user exist in db
+    const userDb = await this.userRepository.getUserByEmail(
+      createUserDto.email,
+    );
+
+    if (userDb) {
+      throw new BadRequestException('USER EXISTED');
+    }
+    // Step 2: Create hashpasswd and save user to db
+    const hashPasswd = await hashPassword(createUserDto.password);
+    const newUser = await this.userRepository.createUser({
+      ...createUserDto,
+      password: hashPasswd,
+    });
+
+    // Step 3: Create accToken and refreshToken
+    const payloadUser = { userId: newUser.id };
+    const { accessToken, refreshToken } = createAccessAndRefreshToken(
+      payloadUser,
+      this.config.get(ConfigEnum.SECRET_KEY),
+    );
+
+    // Step 4: return info
+    return {
+      id: newUser.id,
+      email: newUser.email,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async signIn(signInDto: SignInDTO) {
+    // Step 1: Check user exist in db
+    const userDb = await this.userRepository.getUserByEmail(signInDto.email);
+
+    if (!userDb) {
+      throw new BadRequestException('USER IS NOT EXISTED');
+    }
+    // Step 2: Compare hashPassword
+    const isPasswd = await comparePassword(signInDto.password, userDb.password);
+    if (!isPasswd) {
+      throw new UnauthorizedException('Credentials are invalid');
     }
 
-    // Get users from database
-    const usersFromDb = await this.prismaService.user.findMany();
-    if (!usersFromDb) {
-      throw new BadRequestException('===No user found===');
-    }
+    // Step 3: Create accToken and refreshToken
+    const payloadUser = { userId: userDb.id };
+    const { accessToken, refreshToken } = createAccessAndRefreshToken(
+      payloadUser,
+      this.config.get(ConfigEnum.SECRET_KEY),
+    );
 
-    // Save users to cache
-    await this.redisClient.set('user', JSON.stringify(usersFromDb));
-    this.logger.info('===Save users to cache===');
-
-
-    // Notify worker to send email
-    this.workerProducer.produceJob(WorkerQueuesEnum.EMAIL_QUEUE, "Send email to all users");
-    this.logger.info('===Notify worker to send email===');
-
-    return usersFromDb;
-
+    // Step 4: return info
+    return {
+      id: userDb.id,
+      email: userDb.email,
+      accessToken,
+      refreshToken,
+    };
   }
 }
