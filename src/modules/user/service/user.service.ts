@@ -15,13 +15,13 @@ import {
 } from 'src/core/response/error.response';
 
 @Injectable()
-export class UserSerivce {
+export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly config: ConfigService,
     private readonly logger: PinoLogger,
   ) {
-    this.logger.setContext(UserSerivce.name);
+    this.logger.setContext(UserService.name);
   }
 
   async createUser(createUserDto: CreateUserDTO) {
@@ -83,5 +83,9 @@ export class UserSerivce {
       accessToken,
       refreshToken,
     };
+  }
+
+  async getUserById(userId: string) {
+    return await this.userRepository.getUserById(userId);
   }
 }

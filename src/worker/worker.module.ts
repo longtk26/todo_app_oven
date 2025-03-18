@@ -3,9 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BrokerConfig } from 'src/config/interface';
 import { ConfigEnum } from 'src/config/config';
-import { registerWorkerQueues } from './worker.queues';
+import { registerConsumerQueues, registerWorkerQueues } from './worker.queues';
 import { WorkerProducer } from './worker.producer';
-import { EmailConsumer } from 'src/worker/consumers/email.consumer';
 
 @Module({
   imports: [
@@ -23,7 +22,7 @@ import { EmailConsumer } from 'src/worker/consumers/email.consumer';
     }),
     BullModule.registerQueue(...registerWorkerQueues()),
   ],
-  providers: [WorkerProducer, EmailConsumer],
+  providers: [WorkerProducer, ...registerConsumerQueues()],
   exports: [WorkerProducer],
 })
 export class WorkerModule {}

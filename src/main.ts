@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger as LoggerPino } from 'nestjs-pino';
-import { HttpExceptionFilter } from './core/response/http-exception.response';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './filter/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,7 +13,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   await app.listen(process.env.PORT ?? 3000, () => {
     // Using pino logger
-    app.get(LoggerPino).log('App is running on port ' + process.env.PORT);
+    app.get(LoggerPino).log('Todo app is running on port ' + process.env.PORT);
   });
 }
 

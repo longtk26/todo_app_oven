@@ -1,9 +1,9 @@
 model User {
-  id        String  @id @default(uuid()) // Unique identifier
+  id        String  @id @default(uuid()) 
   name      String  
-  email     String  @unique // Ensure unique emails
-  password  String  // Hashed password storage
-  tasks     Task[]  // One-to-many relation with Task
+  email     String  @unique 
+  password  String  
+  tasks     Task[]  
   createdAt DateTime @default(now()) 
   updatedAt DateTime @updatedAt
 

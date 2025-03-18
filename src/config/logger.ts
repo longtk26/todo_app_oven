@@ -10,7 +10,7 @@ export const specConfigsPino = {
           }
         : undefined,
     base: {
-      app: 'Template NestJS',
+      app: 'TODO APP OVEN',
     },
   },
 };

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/core/orm/prisma';
-import { CreateUserRepository } from './user.types';
+import { CreateUserRepository } from '../types/user.types';
 
 @Injectable()
 export class UserRepository {
@@ -16,6 +16,16 @@ export class UserRepository {
     const user = this.prismaService.user.findUnique({
       where: {
         email,
+      },
+    });
+
+    return user;
+  }
+
+  async getUserById(userId: string) {
+    const user = this.prismaService.user.findUnique({
+      where: {
+        id: userId,
       },
     });
 
