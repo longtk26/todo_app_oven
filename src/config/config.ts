@@ -12,6 +12,10 @@ const config = () => ({
     host: process.env.BROKER_HOST,
     port: process.env.BROKER_PORT,
   },
+  email: {
+    user: process.env.EMAIL_USER,
+    password: process.env.EMAIL_PASSWORD,
+  },
 });
 
 export enum ConfigEnum {
@@ -21,6 +25,7 @@ export enum ConfigEnum {
   ENV = 'env',
   BROKER_CONFIG = 'broker',
   SECRET_KEY = 'secretKey',
+  EMAIL_CONFIG = 'email',
 }
 
 export default config;

@@ -10,3 +10,8 @@ export interface BrokerConfig {
   host: string;
   port: string;
 }
+
+export interface EmailConfig {
+  user: string;
+  password: string;
+}
