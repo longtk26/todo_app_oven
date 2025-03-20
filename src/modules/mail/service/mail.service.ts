@@ -15,8 +15,11 @@ export class MailService {
 
   async sendMail(payload: SendMailPayload) {
     await this.transporter.sendMail({
-      from: this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG).user,
-      to: payload.to,
+      from: {
+        name: 'Task Reminder',
+        address: this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG).user,
+      },
+      to: [payload.to],
       subject: payload.subject,
       text: payload.content,
     });
@@ -24,8 +27,13 @@ export class MailService {
 
   private initMailService() {
     const emailConfig = this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG);
+    console.log(emailConfig.password);
+    console.log(emailConfig.user);
     return nodemailer.createTransport({
       service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: emailConfig.user,
         pass: emailConfig.password,

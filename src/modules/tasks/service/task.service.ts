@@ -6,11 +6,14 @@ import { TaskRepository } from '../repository/task.reposiroty';
 import { WorkerProducer } from 'src/worker/worker.producer';
 import { WorkerQueuesEnum } from 'src/worker/worker.queues';
 import { PinoLogger } from 'nestjs-pino';
+import { ConfigService } from '@nestjs/config';
+import { ConfigEnum } from 'src/config/config';
 
 @Injectable()
 export class TaskService {
   constructor(
     private readonly userService: UserService,
+    private readonly config: ConfigService,
     private readonly taskRepository: TaskRepository,
     private readonly workerProducer: WorkerProducer,
     private readonly logger: PinoLogger,
@@ -133,40 +136,42 @@ export class TaskService {
       taskName: task.title,
     };
 
+    // Handle task start
     const dataStart = {
       ...baseData,
       startDate: task.startDate,
     };
     const gapTime = new Date(task.startDate).getTime() - new Date().getTime();
-    const beforeTime = 1000 * 60 * 5;
+    const beforeTime = parseInt(
+      this.config.get(ConfigEnum.TIME_NOTIFY_REMINDER),
+    );
     let delayStart = 0;
     if (gapTime > beforeTime) {
       delayStart = gapTime - beforeTime;
     }
-
-    this.logger.info(`delayStart:::: ${delayStart}`);
-
+    this.logger.info(`===TIME DELAY START: ${delayStart}===`);
     this.workerProducer.produceJob(
       WorkerQueuesEnum.REMIND_TASK_START_QUEUE,
       dataStart,
       delayStart,
     );
-    this.logger.info(`Task start reminder job created`);
 
     if (!task.dueDate) {
       return;
     }
 
+    // Handle task end
     const dataEnd = {
       ...baseData,
       dueDate: task.dueDate,
     };
+
     const gapTimeEnd = new Date(task.dueDate).getTime() - new Date().getTime();
     let delayEnd = 0;
     if (gapTimeEnd > beforeTime) {
       delayEnd = gapTimeEnd - beforeTime;
     }
-
+    this.logger.info(`===TIME DELAY END: ${delayEnd}===`);
     this.workerProducer.produceJob(
       WorkerQueuesEnum.REMIND_TASK_END_QUEUE,
       dataEnd,

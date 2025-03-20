@@ -16,6 +16,7 @@ const config = () => ({
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
   },
+  timeNotifyRemider: process.env.TIME_NOTIFY_REMINDER || 1000 * 60 * 5,
 });
 
 export enum ConfigEnum {
@@ -26,6 +27,7 @@ export enum ConfigEnum {
   BROKER_CONFIG = 'broker',
   SECRET_KEY = 'secretKey',
   EMAIL_CONFIG = 'email',
+  TIME_NOTIFY_REMINDER = 'timeNotifyRemider',
 }
 
 export default config;
