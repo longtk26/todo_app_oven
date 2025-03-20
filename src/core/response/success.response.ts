@@ -1,12 +1,18 @@
 import { Response } from 'express';
 import { ResponseHTTP } from './interface';
 import { HttpStatus } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SuccessResponse<T> {
-  public status: number;
-  public message: string;
-  public data: T;
-  public headers: any;
+  @ApiProperty()
+  protected status: number;
+
+  @ApiProperty()
+  protected message: string;
+
+  @ApiProperty()
+  protected data: T;
+  protected headers: any;
 
   constructor(public responseHTTP: ResponseHTTP<T>) {
     this.status = responseHTTP.status || HttpStatus.OK;

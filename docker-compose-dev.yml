@@ -1,40 +1,52 @@
 services:
   pgdb:
-    container_name: "pgdb"
-    image: "postgres:latest"
+    container_name: 'pgdb'
+    image: 'postgres:latest'
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DATABASE=postgres
     ports:
-      - "5432:5432"
+      - '5432:5432'
+    volumes:
+      - ./environment/pgdb/data:/var/lib/postgresql/data
     networks:
       - base-network
   pgadmin:
-    container_name: "pgadmin"
-    image: "dpage/pgadmin4"
+    container_name: 'pgadmin'
+    image: 'dpage/pgadmin4'
     ports:
-      - "5050:80"
+      - '5050:80'
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@gmail.com
       - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     networks:
       - base-network
   rdb:
-    container_name: "rdb"
-    image: "redis:latest"
+    container_name: 'rdb'
+    image: 'redis:latest'
     ports:
-      - "6379:6379"
+      - '6379:6379'
+    volumes:
+      - ./environment/rdb/data:/data
     networks:
       - base-network
   rdb-insight:
     image: redis/redisinsight:latest
     restart: always
     ports:
-      - "5540:5540"
+      - '5540:5540'
+    volumes:
+      - redisinsight:/db
     networks:
       - base-network
 
 networks:
   base-network:
     external: true
+
+volumes:
+  pgadmin_data:
+  redisinsight:

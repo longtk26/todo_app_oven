@@ -12,15 +12,22 @@ import {
 } from '@nestjs/common';
 import { SuccessResponse } from 'src/core/response/success.response';
 import { Response } from 'express';
-import { CreateTaskDTO, UpdateTaskDTO } from '../dto/task.dto';
+import { CreateTaskDTO, CreateTaskResponseDTO, EditTaskResponseDataDTO, EditTaskResponseDTO, GetTaskResponseDTO, UpdateTaskDTO } from '../dto/task.dto';
 import { TaskService } from '../service/task.service';
 import { UserRequest } from 'src/modules/user/interface/user.interface';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post()
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Tasks created successfully',
+    type: CreateTaskResponseDTO,
+  })
+  @ApiBearerAuth()
   async createTask(
     @Res() res: Response,
     @Body() createTaskDto: CreateTaskDTO,
@@ -37,6 +44,12 @@ export class TaskController {
   }
 
   @Get()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Tasks found',
+    type: GetTaskResponseDTO,
+  })
+  @ApiBearerAuth()
   async getTasks(@Res() res: Response, @Req() userReq: UserRequest) {
     const data = await this.taskService.getTasks(userReq.user.userId);
 
@@ -48,6 +61,12 @@ export class TaskController {
   }
 
   @Patch(':taskId')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Tasks updated successfully',
+    type: EditTaskResponseDTO,
+  })
+  @ApiBearerAuth()
   async updateTask(
     @Res() res: Response,
     @Req() userReq: UserRequest,
@@ -60,14 +79,20 @@ export class TaskController {
       userReq.user.userId,
     );
 
-    return new SuccessResponse({
+    return new SuccessResponse<EditTaskResponseDataDTO>({
       status: HttpStatus.OK,
       message: 'Tasks updated',
-      data: data,
+      data: { id: data.id },
     }).send(res);
   }
 
   @Delete(':taskId')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Tasks deleted successfully',
+    type: EditTaskResponseDTO
+  })
+  @ApiBearerAuth()
   async deleteTask(
     @Res() res: Response,
     @Req() userReq: UserRequest,
@@ -75,10 +100,10 @@ export class TaskController {
   ) {
     const data = await this.taskService.deleteTask(taskId, userReq.user.userId);
 
-    return new SuccessResponse({
+    return new SuccessResponse<EditTaskResponseDataDTO>({
       status: HttpStatus.OK,
       message: 'Tasks deleted',
-      data: data,
+      data: { id: data.id },
     }).send(res);
   }
 }
