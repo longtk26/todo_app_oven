@@ -30,30 +30,30 @@ export class CreateTaskDTO {
 export class UpdateTaskDTO {
   @IsOptional()
   @ApiProperty()
-  title: string;
+  title?: string;
 
   @ApiProperty()
   @IsOptional()
-  description: string;
+  description?: string;
 
   @ApiProperty({ enum: TaskPriority })
   @IsOptional()
   @IsEnum(TaskPriority)
-  priority: TaskPriority;
+  priority?: TaskPriority;
 
   @ApiProperty()
   @IsOptional()
   @IsDateString()
-  dueDate: string;
+  dueDate?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsDateString()
-  startDate: string;
+  startDate?: string;
 
   @ApiProperty({ enum: TaskStatus })
   @IsOptional()
-  status: TaskStatus;
+  status?: TaskStatus;
 }
 
 export class TaskResponseDataDTO {

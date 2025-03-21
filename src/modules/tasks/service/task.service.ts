@@ -47,15 +47,15 @@ export class TaskService {
       userId,
     });
 
+    if (!newTask) {
+      throw new InternalServerErrorException('CREATE TASK FAILED');
+    }
+
     // Remind the user to do the task
     this.sendTaskReminderEmail(newTask.id, userId);
 
     // Clear task list cache
     await this.deleteTaskListCache(userId);
-
-    if (!newTask) {
-      throw new InternalServerErrorException('CREATE TASK FAILED');
-    }
 
     return newTask;
   }
@@ -85,11 +85,11 @@ export class TaskService {
     userId: string,
   ) {
     // Check task ownership
-    const taskUser = await this.validateTaskOwnership(taskId, userId);
+    await this.validateTaskOwnership(taskId, userId);
 
     // Validate start and due date
     await this.validateStartAndDueDate(
-      updateTaskDto.startDate || taskUser.startDate.toString(),
+      updateTaskDto.startDate,
       updateTaskDto.dueDate,
     );
 
@@ -108,7 +108,9 @@ export class TaskService {
     );
 
     // Remind the user to do the task
-    this.sendTaskReminderEmail(taskId, userId);
+    if (updateTaskDto.startDate || updateTaskDto.dueDate) {
+      this.sendTaskReminderEmail(taskId, userId);
+    }
 
     // Clear task list cache
     await this.deleteTaskListCache(userId);
@@ -133,9 +135,11 @@ export class TaskService {
     return deletedTask;
   }
 
-  private async validateStartAndDueDate(startDate: string, dueDate: string) {
-    if (new Date(startDate) < new Date()) {
-      throw new BadRequestException('START DATE MUST BE IN THE FUTURE');
+  async validateStartAndDueDate(startDate: string, dueDate: string) {
+    if (startDate) {
+      if (new Date(startDate) < new Date()) {
+        throw new BadRequestException('START DATE MUST BE IN THE FUTURE');
+      }
     }
 
     if (startDate && dueDate) {
@@ -145,7 +149,7 @@ export class TaskService {
     }
   }
 
-  private async validateTaskOwnership(taskId: string, userId: string) {
+  async validateTaskOwnership(taskId: string, userId: string) {
     const taskUser = await this.taskRepository.getTaskById(taskId);
     if (taskUser.userId !== userId) {
       throw new BadRequestException('TASK IS NOT YOURS');
@@ -153,14 +157,11 @@ export class TaskService {
     return taskUser;
   }
 
-  private async getTaskListFromCache(userId: string) {
+  async getTaskListFromCache(userId: string) {
     return this.redis.get(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`);
   }
 
-  private async setTaskListToCache(
-    userId: string,
-    tasks: GetTaskRepositoryType[],
-  ) {
+  async setTaskListToCache(userId: string, tasks: GetTaskRepositoryType[]) {
     return this.redis.set(
       `${TaskService.KEY_STORE_LIST_TASK}:${userId}`,
       tasks,
@@ -168,11 +169,11 @@ export class TaskService {
     );
   }
 
-  private async deleteTaskListCache(userId: string) {
+  async deleteTaskListCache(userId: string) {
     return this.redis.del(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`);
   }
 
-  private async sendTaskReminderEmail(taskId: string, userId: string) {
+  async sendTaskReminderEmail(taskId: string, userId: string) {
     const task = await this.taskRepository.getTaskById(taskId);
     const user = await this.userService.getUserById(userId);
     const baseData = {
