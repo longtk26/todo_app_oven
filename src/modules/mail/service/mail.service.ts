@@ -4,36 +4,46 @@ import { ConfigService } from '@nestjs/config';
 import nodemailer, { Transporter } from 'nodemailer';
 import { EmailConfig } from 'src/config/interface';
 import { ConfigEnum } from 'src/config/config';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class MailService {
   private readonly transporter: Transporter;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly logger: PinoLogger,
+  ) {
     this.transporter = this.initMailService();
   }
 
   async sendMail(payload: SendMailPayload) {
-    await this.transporter.sendMail({
-      from: {
-        name: 'Task Reminder',
-        address: this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG).user,
-      },
-      to: [payload.to],
-      subject: payload.subject,
-      text: payload.content,
-    });
+    try {
+      this.logger.info(`Sending email to ${payload.to}`);
+      await this.transporter.sendMail({
+        from: {
+          name: 'Task Reminder',
+          address: this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG).user,
+        },
+        to: [payload.to],
+        subject: payload.subject,
+        text: payload.content,
+      });
+      this.logger.info(`Email sent to ${payload.to}`);
+    } catch (error) {
+      this.logger.error(`Error sending email to ${payload.to}`);
+      return error;
+    }
   }
 
   private initMailService() {
     const emailConfig = this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG);
-    console.log(emailConfig.password);
-    console.log(emailConfig.user);
+
     return nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      service: emailConfig.service,
+      host: emailConfig.host,
+      port: parseInt(emailConfig.port),
+      secure: emailConfig.isSecure,
       auth: {
         user: emailConfig.user,
         pass: emailConfig.password,

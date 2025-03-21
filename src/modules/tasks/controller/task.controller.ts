@@ -12,7 +12,14 @@ import {
 } from '@nestjs/common';
 import { SuccessResponse } from 'src/core/response/success.response';
 import { Response } from 'express';
-import { CreateTaskDTO, CreateTaskResponseDTO, EditTaskResponseDataDTO, EditTaskResponseDTO, GetTaskResponseDTO, UpdateTaskDTO } from '../dto/task.dto';
+import {
+  CreateTaskDTO,
+  CreateTaskResponseDTO,
+  EditTaskResponseDataDTO,
+  EditTaskResponseDTO,
+  GetTaskResponseDTO,
+  UpdateTaskDTO,
+} from '../dto/task.dto';
 import { TaskService } from '../service/task.service';
 import { UserRequest } from 'src/modules/user/interface/user.interface';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
@@ -90,7 +97,7 @@ export class TaskController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Tasks deleted successfully',
-    type: EditTaskResponseDTO
+    type: EditTaskResponseDTO,
   })
   @ApiBearerAuth()
   async deleteTask(

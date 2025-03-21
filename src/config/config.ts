@@ -15,6 +15,10 @@ const config = () => ({
   email: {
     user: process.env.EMAIL_USER,
     password: process.env.EMAIL_PASSWORD,
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    isSecure: process.env.EMAIL_SECURE,
+    service: process.env.EMAIL_SERVICE,
   },
   timeNotifyRemider: process.env.TIME_NOTIFY_REMINDER || 1000 * 60 * 5,
 });

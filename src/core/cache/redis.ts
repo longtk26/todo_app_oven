@@ -6,8 +6,8 @@ import { Cache } from 'cache-manager';
 export class RedisClient {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  public async set(key: string, value: any) {
-    return await this.cacheManager.set(key, value);
+  public async set(key: string, value: any, ttl?: number) {
+    return await this.cacheManager.set(key, value, ttl);
   }
 
   public async get(key: string) {

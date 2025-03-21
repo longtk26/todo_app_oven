@@ -8,15 +8,20 @@ import { WorkerQueuesEnum } from 'src/worker/worker.queues';
 import { PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { ConfigEnum } from 'src/config/config';
+import { RedisClient } from 'src/core/cache/redis';
+import { GetTaskRepositoryType } from '../types/task.types';
 
 @Injectable()
 export class TaskService {
+  static KEY_STORE_LIST_TASK = 'todo:tasks';
+
   constructor(
     private readonly userService: UserService,
     private readonly config: ConfigService,
     private readonly taskRepository: TaskRepository,
     private readonly workerProducer: WorkerProducer,
     private readonly logger: PinoLogger,
+    private readonly redis: RedisClient,
   ) {}
   async createTask(createTaskDto: CreateTaskDTO, userId: string) {
     // Check if the user exists
@@ -45,6 +50,9 @@ export class TaskService {
     // Remind the user to do the task
     this.sendTaskReminderEmail(newTask.id, userId);
 
+    // Clear task list cache
+    await this.deleteTaskListCache(userId);
+
     if (!newTask) {
       throw new InternalServerErrorException('CREATE TASK FAILED');
     }
@@ -53,7 +61,21 @@ export class TaskService {
   }
 
   async getTasks(userId: string) {
-    const tasks = await this.taskRepository.getTasksByUserId(userId);
+    // Get task list from cache
+    const taskList = await this.getTaskListFromCache(userId);
+    if (taskList) {
+      this.logger.info('===GET TASK LIST FROM CACHE===');
+      return taskList;
+    }
+
+    const tasks = (await this.taskRepository.getTasksByUserId(
+      userId,
+    )) as GetTaskRepositoryType[];
+    this.logger.info('===GET TASK LIST FROM DATABASE===');
+
+    // Store task list to cache
+    await this.setTaskListToCache(userId, tasks);
+
     return tasks;
   }
 
@@ -87,6 +109,9 @@ export class TaskService {
 
     // Remind the user to do the task
     this.sendTaskReminderEmail(taskId, userId);
+
+    // Clear task list cache
+    await this.deleteTaskListCache(userId);
 
     if (!updatedTask) {
       throw new InternalServerErrorException('UPDATE TASK FAILED');
@@ -126,6 +151,25 @@ export class TaskService {
       throw new BadRequestException('TASK IS NOT YOURS');
     }
     return taskUser;
+  }
+
+  private async getTaskListFromCache(userId: string) {
+    return this.redis.get(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`);
+  }
+
+  private async setTaskListToCache(
+    userId: string,
+    tasks: GetTaskRepositoryType[],
+  ) {
+    return this.redis.set(
+      `${TaskService.KEY_STORE_LIST_TASK}:${userId}`,
+      tasks,
+      0,
+    );
+  }
+
+  private async deleteTaskListCache(userId: string) {
+    return this.redis.del(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`);
   }
 
   private async sendTaskReminderEmail(taskId: string, userId: string) {

@@ -17,3 +17,16 @@ export type UpdateTaskRepositoryType = {
   dueDate?: string;
   status?: TaskStatus;
 };
+
+export type GetTaskRepositoryType = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  startDate?: Date;
+  dueDate?: Date;
+  userId: string;
+};

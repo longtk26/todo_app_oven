@@ -14,4 +14,8 @@ export interface BrokerConfig {
 export interface EmailConfig {
   user: string;
   password: string;
+  host: string;
+  port: string;
+  isSecure: boolean;
+  service: string;
 }
