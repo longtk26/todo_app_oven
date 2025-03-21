@@ -35,6 +35,7 @@ services:
       - base-network
   rdb-insight:
     image: redis/redisinsight:latest
+    container_name: 'rdb-insight'
     restart: always
     ports:
       - '5540:5540'
