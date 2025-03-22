@@ -132,6 +132,8 @@ export class TaskService {
       throw new InternalServerErrorException('DELETE TASK FAILED');
     }
 
+    // Clear task list cache
+    await this.deleteTaskListCache(userId);
     return deletedTask;
   }
 
