@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { CreateUserDTO, SignInDTO } from '../dto/user.dto';
 import { UserRepository } from '../repository/user.repository';
@@ -13,6 +13,10 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from 'src/core/response/error.response';
+import { TokenService } from 'src/modules/tokens/service/token.service';
+import { WorkerProducer } from 'src/worker/worker.producer';
+import { WorkerQueuesEnum } from 'src/worker/worker.enum';
+import { link } from 'fs';
 
 @Injectable()
 export class UserService {
@@ -20,6 +24,8 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly config: ConfigService,
     private readonly logger: PinoLogger,
+    private readonly tokenService: TokenService,
+    private readonly workerProducer: WorkerProducer,
   ) {
     this.logger.setContext(UserService.name);
   }
@@ -82,6 +88,53 @@ export class UserService {
       email: userDb.email,
       accessToken,
       refreshToken,
+    };
+  }
+
+  async verifyUser(userId: string) {
+    // Step 1: Check user exist in db
+    const userDb = await this.userRepository.getUserById(userId);
+    if (!userDb) {
+      throw new BadRequestException('USER IS NOT EXISTED');
+    }
+
+    // Step 2: Create a token
+    const token = await this.tokenService.createToken(userId);
+
+    // Step 3: Send email to worker
+    await this.workerProducer.produceJob(
+      WorkerQueuesEnum.SEND_EMAIL_VERIFICATION_QUEUE,
+      {
+        email: userDb.email,
+        link: `${this.config.get(ConfigEnum.CLIENT_URL)}/user/verify-email?token=${token}`,
+      },
+      0, // Not delay
+    );
+
+    return {
+      id: userDb.id,
+      email: userDb.email,
+    };
+  }
+  
+
+  async verifyUserEmail(token: string) {
+    // Step 1: Verify token
+    const info = await this.tokenService.verifyToken(token);
+    if (!info) {
+      throw new InternalServerErrorException('VERIFY TOKEN FAILED');
+    }
+    const userId = info.userId;
+
+    // Step 2: Update user
+    const data = await this.userRepository.updateUser(userId, {
+      isVerified: true,
+    });
+    
+    return {
+      id: data.id,
+      email: data.email,
+      isVerified: data.isVerified,
     };
   }
 

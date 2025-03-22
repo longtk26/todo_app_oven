@@ -6,13 +6,15 @@ import { AuthMiddleware } from 'src/middlewares/auth.middleware';
 import { TaskService } from './service/task.service';
 import { TaskRepository } from './repository/task.reposiroty';
 import { WorkerModule } from 'src/worker/worker.module';
-import { UserService } from '../user/service/user.service';
-import { UserRepository } from '../user/repository/user.repository';
+import { UserModule } from '../user/user.module';
 
 @Module({
-  imports: [PrismaModule, RedisModule, WorkerModule],
+  imports: [PrismaModule, RedisModule, WorkerModule, UserModule],
   controllers: [TaskController],
-  providers: [TaskService, TaskRepository, UserService, UserRepository],
+  providers: [
+    TaskService,
+    TaskRepository,
+  ],
 })
 export class TaskModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

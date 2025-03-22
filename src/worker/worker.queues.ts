@@ -2,11 +2,8 @@ import {
   ReminderEndTaskConsumer,
   ReminderStartTaskConsumer,
 } from './consumers/reminder.consumer';
-
-export enum WorkerQueuesEnum {
-  REMIND_TASK_START_QUEUE = 'remind_task_start_queue',
-  REMIND_TASK_END_QUEUE = 'remind_task_end_queue',
-}
+import { VerifyEmailConsumer } from './consumers/verify.consumer';
+import { WorkerQueuesEnum } from './worker.enum';
 
 export const registerWorkerQueues = () => {
   return Object.values(WorkerQueuesEnum).map((queue) => ({
@@ -15,5 +12,5 @@ export const registerWorkerQueues = () => {
 };
 
 export const registerConsumerQueues = () => {
-  return [ReminderStartTaskConsumer, ReminderEndTaskConsumer];
+  return [ReminderStartTaskConsumer, ReminderEndTaskConsumer, VerifyEmailConsumer];
 };

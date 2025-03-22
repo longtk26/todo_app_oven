@@ -3,3 +3,8 @@ export type CreateUserRepository = {
   email: string;
   password: string;
 };
+
+export type UpdateUserRepository = {
+  name?: string;
+  isVerified?: boolean;
+}

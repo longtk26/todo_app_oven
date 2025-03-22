@@ -4,6 +4,7 @@ model User {
   email     String  @unique 
   password  String  
   tasks     Task[]  
+  isVerified Boolean @default(false)
   createdAt DateTime @default(now()) 
   updatedAt DateTime @updatedAt
 

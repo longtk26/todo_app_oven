@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/core/orm/prisma';
-import { CreateUserRepository } from '../types/user.types';
+import { CreateUserRepository, UpdateUserRepository } from '../types/user.types';
 
 @Injectable()
 export class UserRepository {
@@ -40,5 +40,18 @@ export class UserRepository {
     });
 
     return data;
+  }
+
+  async updateUser(userId: string, data: UpdateUserRepository) {
+    const user = this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        ...data,
+      },
+    });
+
+    return user;
   }
 }

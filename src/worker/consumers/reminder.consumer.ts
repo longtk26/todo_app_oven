@@ -2,8 +2,9 @@ import { WorkerHost, Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { PinoLogger } from 'nestjs-pino';
 import { MailService } from 'src/modules/mail/service/mail.service';
+import { WorkerQueuesEnum } from '../worker.enum';
 
-@Processor('remind_task_start_queue')
+@Processor(WorkerQueuesEnum.REMIND_TASK_START_QUEUE)
 export class ReminderStartTaskConsumer extends WorkerHost {
   constructor(
     private readonly logger: PinoLogger,
@@ -25,7 +26,7 @@ export class ReminderStartTaskConsumer extends WorkerHost {
   }
 }
 
-@Processor('remind_task_end_queue')
+@Processor(WorkerQueuesEnum.REMIND_TASK_END_QUEUE)
 export class ReminderEndTaskConsumer extends WorkerHost {
   constructor(
     private readonly logger: PinoLogger,

@@ -1,7 +1,7 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
-import { WorkerQueuesEnum } from './worker.queues';
 import { Queue } from 'bullmq';
+import { WorkerQueuesEnum } from './worker.enum';
 
 @Injectable()
 export class WorkerProducer {
@@ -11,6 +11,8 @@ export class WorkerProducer {
     private remindTaskStartQueueService: Queue,
     @InjectQueue(WorkerQueuesEnum.REMIND_TASK_END_QUEUE)
     private remindTaskEndQueueService: Queue,
+    @InjectQueue(WorkerQueuesEnum.SEND_EMAIL_VERIFICATION_QUEUE)
+    private sendEmailVerificationQueueService: Queue,
   ) {
     this.registerQueues();
   }
@@ -33,6 +35,8 @@ export class WorkerProducer {
       [WorkerQueuesEnum.REMIND_TASK_START_QUEUE]:
         this.remindTaskStartQueueService,
       [WorkerQueuesEnum.REMIND_TASK_END_QUEUE]: this.remindTaskEndQueueService,
+      [WorkerQueuesEnum.SEND_EMAIL_VERIFICATION_QUEUE]:
+        this.sendEmailVerificationQueueService,
     };
   }
 }

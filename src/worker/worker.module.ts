@@ -5,7 +5,7 @@ import { BrokerConfig } from 'src/config/interface';
 import { ConfigEnum } from 'src/config/config';
 import { registerConsumerQueues, registerWorkerQueues } from './worker.queues';
 import { WorkerProducer } from './worker.producer';
-import { MailService } from 'src/modules/mail/service/mail.service';
+import { MailModule } from 'src/modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -22,8 +22,9 @@ import { MailService } from 'src/modules/mail/service/mail.service';
       inject: [ConfigService],
     }),
     BullModule.registerQueue(...registerWorkerQueues()),
+    MailModule,
   ],
-  providers: [WorkerProducer, MailService, ...registerConsumerQueues()],
+  providers: [WorkerProducer, ...registerConsumerQueues()],
   exports: [WorkerProducer],
 })
 export class WorkerModule {}

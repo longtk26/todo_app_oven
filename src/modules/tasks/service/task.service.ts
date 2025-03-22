@@ -4,12 +4,12 @@ import { UserService } from 'src/modules/user/service/user.service';
 import { BadRequestException } from 'src/core/response/error.response';
 import { TaskRepository } from '../repository/task.reposiroty';
 import { WorkerProducer } from 'src/worker/worker.producer';
-import { WorkerQueuesEnum } from 'src/worker/worker.queues';
 import { PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { ConfigEnum } from 'src/config/config';
 import { RedisClient } from 'src/core/cache/redis';
 import { GetTaskRepositoryType } from '../types/task.types';
+import { WorkerQueuesEnum } from 'src/worker/worker.enum';
 
 @Injectable()
 export class TaskService {

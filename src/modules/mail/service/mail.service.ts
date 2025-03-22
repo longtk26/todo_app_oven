@@ -22,7 +22,7 @@ export class MailService {
       this.logger.info(`Sending email to ${payload.to}`);
       await this.transporter.sendMail({
         from: {
-          name: 'Task Reminder',
+          name: 'TODO APP',
           address: this.config.get<EmailConfig>(ConfigEnum.EMAIL_CONFIG).user,
         },
         to: [payload.to],

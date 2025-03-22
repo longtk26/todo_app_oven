@@ -21,6 +21,7 @@ const config = () => ({
     service: process.env.EMAIL_SERVICE,
   },
   timeNotifyRemider: process.env.TIME_NOTIFY_REMINDER || 1000 * 60 * 5,
+  client_url: process.env.CLIENT_URL,
 });
 
 export enum ConfigEnum {
@@ -32,6 +33,7 @@ export enum ConfigEnum {
   SECRET_KEY = 'secretKey',
   EMAIL_CONFIG = 'email',
   TIME_NOTIFY_REMINDER = 'timeNotifyRemider',
+  CLIENT_URL = 'client_url',
 }
 
 export default config;
