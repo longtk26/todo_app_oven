@@ -176,6 +176,12 @@ export class TaskService {
   async sendTaskReminderEmail(taskId: string, userId: string) {
     const task = await this.taskRepository.getTaskById(taskId);
     const user = await this.userService.getUserById(userId);
+
+    if (!user.isVerified) {
+      this.logger.warn('===USER NOT VERIFIED===');
+      return;
+    }
+
     const baseData = {
       email: user.email,
       taskName: task.title,
@@ -190,16 +196,15 @@ export class TaskService {
     const beforeTime = parseInt(
       this.config.get(ConfigEnum.TIME_NOTIFY_REMINDER),
     );
-    let delayStart = 0;
     if (gapTime > beforeTime) {
-      delayStart = gapTime - beforeTime;
+      const delayStart = gapTime - beforeTime;
+      this.logger.info(`===TIME DELAY START: ${delayStart}===`);
+      this.workerProducer.produceJob(
+        WorkerQueuesEnum.REMIND_TASK_START_QUEUE,
+        dataStart,
+        delayStart,
+      );
     }
-    this.logger.info(`===TIME DELAY START: ${delayStart}===`);
-    this.workerProducer.produceJob(
-      WorkerQueuesEnum.REMIND_TASK_START_QUEUE,
-      dataStart,
-      delayStart,
-    );
 
     if (!task.dueDate) {
       return;
@@ -212,15 +217,14 @@ export class TaskService {
     };
 
     const gapTimeEnd = new Date(task.dueDate).getTime() - new Date().getTime();
-    let delayEnd = 0;
     if (gapTimeEnd > beforeTime) {
-      delayEnd = gapTimeEnd - beforeTime;
+      const delayEnd = gapTimeEnd - beforeTime;
+      this.logger.info(`===TIME DELAY END: ${delayEnd}===`);
+      this.workerProducer.produceJob(
+        WorkerQueuesEnum.REMIND_TASK_END_QUEUE,
+        dataEnd,
+        delayEnd,
+      );
     }
-    this.logger.info(`===TIME DELAY END: ${delayEnd}===`);
-    this.workerProducer.produceJob(
-      WorkerQueuesEnum.REMIND_TASK_END_QUEUE,
-      dataEnd,
-      delayEnd,
-    );
   }
 }

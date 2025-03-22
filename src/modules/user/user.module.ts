@@ -5,7 +5,7 @@ import { PrismaModule } from 'src/core/orm/prisma.module';
 import { RedisModule } from 'src/core/cache/redis.module';
 import { WorkerModule } from 'src/worker/worker.module';
 import { UserRepository } from './repository/user.repository';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { AuthMiddleware } from 'src/middlewares/auth.middleware';
 import { TokenModule } from '../tokens/token.module';
 
