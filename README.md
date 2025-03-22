@@ -88,5 +88,16 @@ docker compose -f docker-compose.yml up --build
 Visit `http://localhost:<port>/api` to view the OpenAPI (Swagger) documentation.
 
 ---
+## Flow of working
+### Create task
+![alt text](./docs/imgs/create-task.png)
+
+### Update task
+![alt text](docs/imgs/update-task.png)
+
+### Email verification
+![alt text](docs/imgs/email-verification.png)
+
+---
 
 Enjoy managing your tasks with **TODO APP**! ✅
