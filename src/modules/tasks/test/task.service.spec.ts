@@ -18,6 +18,7 @@ describe('TaskService', () => {
   let taskRepository: TaskRepository;
   let workerProducer: WorkerProducer;
   let redisClient: RedisClient;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -43,7 +44,7 @@ describe('TaskService', () => {
         },
         {
           provide: PinoLogger,
-          useValue: { info: jest.fn(), error: jest.fn() },
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
         },
         {
           provide: ConfigService,
@@ -61,6 +62,7 @@ describe('TaskService', () => {
     taskRepository = module.get<TaskRepository>(TaskRepository);
     workerProducer = module.get<WorkerProducer>(WorkerProducer);
     redisClient = module.get<RedisClient>(RedisClient);
+    configService = module.get<ConfigService>(ConfigService);
   });
 
   afterEach(() => {
@@ -73,8 +75,8 @@ describe('TaskService', () => {
       title: 'Test Task',
       description: 'Test Description',
       priority: TaskPriority.LOW,
-      startDate: new Date(Date.now() + 60 * 1000).toISOString(),
-      dueDate: new Date(Date.now() + 60 * 1000 * 2).toISOString(),
+      startDate: new Date(Date.now() + 60 * 1000 * 10).toISOString(),
+      dueDate: new Date(Date.now() + 60 * 1000 * 11).toISOString(),
     };
 
     it('should throw BadRequestException if user is not found', async () => {
@@ -86,17 +88,30 @@ describe('TaskService', () => {
     });
 
     it('should create a task successfully', async () => {
+      const fixedNow = new Date('2024-03-22T12:00:00Z').getTime(); // Giả lập thời gian hiện tại
+      jest.spyOn(Date, 'now').mockImplementation(() => fixedNow);
+
       const mockUser = {
         id: userId,
         name: 'John Doe',
         email: 'longtk26@gmail.com',
+        isVerified: true,
       };
-      const mockTask = { id: 'task-1', ...createTaskDto, userId };
+      const mockTask = {
+        id: 'task-1',
+        ...createTaskDto,
+        userId,
+        startDate: new Date(fixedNow + 2 * 60000).toISOString(), // start sau 2 phút
+        dueDate: new Date(fixedNow + 5 * 60000).toISOString(), // due sau 5 phút
+      };
 
       (userService.getUserById as jest.Mock).mockResolvedValue(mockUser);
       (taskRepository.createTask as jest.Mock).mockResolvedValue(mockTask);
       (taskRepository.getTaskById as jest.Mock).mockResolvedValue(mockTask);
       (workerProducer.produceJob as jest.Mock).mockImplementation(jest.fn());
+      (configService.get as jest.Mock).mockReturnValue(60000);
+      (taskService['redis'] as any).get = jest.fn();
+      (taskService['redis'] as any).set = jest.fn();
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
       const result = await taskService.createTask(createTaskDto, userId);
@@ -108,6 +123,8 @@ describe('TaskService', () => {
         dueDate: expect.any(String),
         userId,
       });
+
+      
       expect(workerProducer.produceJob).toHaveBeenCalledWith(
         'remind_task_start_queue',
         {
@@ -115,8 +132,9 @@ describe('TaskService', () => {
           startDate: mockTask.startDate,
           taskName: mockTask.title,
         },
-        0,
+        60000, 
       );
+
       expect(workerProducer.produceJob).toHaveBeenCalledWith(
         'remind_task_end_queue',
         {
@@ -124,8 +142,9 @@ describe('TaskService', () => {
           dueDate: mockTask.dueDate,
           taskName: mockTask.title,
         },
-        0,
+        240000, 
       );
+
       expect(redisClient.del).toHaveBeenCalledWith(`todo:tasks:${userId}`);
     });
 
@@ -216,6 +235,7 @@ describe('TaskService', () => {
       (taskRepository.deleteTask as jest.Mock).mockResolvedValue(mockTask);
       (workerProducer.produceJob as jest.Mock).mockImplementation(jest.fn());
       (redisClient.del as jest.Mock).mockResolvedValue(1);
+      (taskService['redis'] as any).get = jest.fn();
 
       const result = await taskService.createTask(createTaskDto, userId);
       const deletedTask = await taskService.deleteTask(result.id, userId);
@@ -227,7 +247,7 @@ describe('TaskService', () => {
 
   describe('getTask', () => {
     const userId = '123';
-    const mockTasks: GetTaskRepositoryType[] = [
+    const mockTasks = [
       {
         id: 'task-1',
         title: 'Test Task 1',
