@@ -1,83 +1,92 @@
 # TODO APP 🏢
 
-## About Project 📖
-The project helps user manages their tasks in a day.
-Feature of application:
-1. User can register their account and login to use app.
-2. Create task.
-3. Set deadline and basic information of a task.
-4. Verification email.
-5. Send mail to remind user making their task before task is about start and before task is about end.
+## 📖 About the Project
+The **TODO App** helps users manage their daily tasks efficiently. 
+### Features:
+1. User registration and login.
+2. Create tasks.
+3. Set deadlines and task details.
+4. Email verification.
+5. Email reminders before a task starts and before it ends.
 
+---
 
-## Prerequisite ⚙️
-- Docker: `version 28.0.1` 🐋
-- NodeJS: `version 23.6.1` ｡🇯‌🇸‌
-- Make: `version 4.3`
+## ⚙️ Prerequisites
+Ensure the following dependencies are installed:
+- **Docker**: `version 28.0.1` 🐋
+- **Node.js**: `version 23.6.1` 🇯‌🇸‌
+- **Make**: `version 4.3`
 
-## How to run 🤔
-1. Clone the repository
-    ```
-    git clone https://github.com/longtk26/todo_app_oven.git
-    ```
+---
 
-2. Move to todo_app_oven directory
-    ```
-    cd ./todo_app_oven
-    ```
+## 🤔 How to Run
 
-3. Install packages
-    ```
-    npm i --legacy-peer-deps
-    ```
+### 1️⃣ Clone the Repository
+```sh
+git clone https://github.com/longtk26/todo_app_oven.git
+```
 
-4. Using docker to run tools (database, cache, pgadmin4...) from local
-    ```
-    docker compose -f docker-compose-dev.yml up -d
-    ```
+### 2️⃣ Navigate to the Project Directory
+```sh
+cd todo_app_oven
+```
 
-5. Prepare `.env` file
-    ```
-    Fill essential information in .env file based on .ex.env file
-    ```
-6. Prepare database
-- Access to pgadmin: `http://localhost:5050` with username is `admin@gmail.com` password is `admin`
-- Register a server:
-    ![alt text](./docs/imgs/pgadmin.png)
-- Fill name and connection:
-    ![alt text](docs/imgs/pgadmin-general.png)
-    ![alt text](docs/imgs/pgadmin-connection.png)
-    ```
-    Because all tools are running in container, you need to fill host of database is the name of container. Based on that pgadmin can find postgres database and connect to it.
-    Username and password are given in docker-compose-dev.yml file.
-    ```
-- Create todo_app database:
-    ![alt text](docs/imgs/pgadmin-create-database.png)
+### 3️⃣ Install Dependencies
+```sh
+npm i --legacy-peer-deps
+```
 
-    You can change the name of database if you want. Only need to change the name of database in `.env` file. 
+### 4️⃣ Start Essential Services with Docker
+```sh
+docker compose -f docker-compose-dev.yml up -d
+```
 
-- Run migration:
-    ```
-    make migrateup
-    ```
-7. Run application
-    ```
-    npm start
-    ```
-    Now, the application will run at `http://localhost:<port>`. <br/>
-    If you want to run app in docker container. You can see the guidline in `Step 7`
+### 5️⃣ Prepare the `.env` File
+- Fill in the necessary information based on `.ex.env`.
 
-8. Run application in container (optional)
-    After run essential tools in `docker-compose-dev.yml`, prepare `.env` file and `database` you can run application in container.<br/>
-    ```
-    docker compose -f docker-compose.yml up --build
-    ```
+### 6️⃣ Prepare the Database
+#### Access pgAdmin:
+- Open: `http://localhost:5050`
+- **Username**: `admin@gmail.com`
+- **Password**: `admin`
 
-    
+#### Register a Server:
+![pgAdmin Server](docs/imgs/pgadmin.png)
 
-## Swagger API document
-Access to `http://localhost:<port>/api` to see OpenAPI docs.
+#### Fill in the Name and Connection Details:
+![pgAdmin General Settings](docs/imgs/pgadmin-general.png)
+![pgAdmin Connection](docs/imgs/pgadmin-connection.png)
 
+📌 Since all services run in containers, set the database **host** to the container name to enable pgAdmin to find and connect to the PostgreSQL database. Username and password details are in `docker-compose-dev.yml`.
 
+#### Create the `todo_app` Database:
+![Create Database](docs/imgs/pgadmin-create-database.png)
 
+- You can rename the database, but ensure the name is updated in the `.env` file.
 
+#### Run Database Migrations:
+```sh
+make migrateup
+```
+
+### 7️⃣ Run the Application
+```sh
+npm start
+```
+- The application will be available at `http://localhost:<port>`.
+- To run the app inside a Docker container, refer to **Step 8**.
+
+### 8️⃣ Run the Application in a Docker Container (Optional)
+After setting up essential services (`docker-compose-dev.yml`), preparing the `.env` file, and configuring the database, run:
+```sh
+docker compose -f docker-compose.yml up --build
+```
+
+---
+
+## 📜 API Documentation
+Visit `http://localhost:<port>/api` to view the OpenAPI (Swagger) documentation.
+
+---
+
+Enjoy managing your tasks with **TODO APP**! ✅
