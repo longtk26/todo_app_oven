@@ -1,5 +1,9 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { CreateTaskDTO, UpdateTaskDTO } from '../dto/task.dto';
+import {
+  CreateTaskDTO,
+  TaskResponseDataDTO,
+  UpdateTaskDTO,
+} from '../dto/task.dto';
 import { UserService } from 'src/modules/user/service/user.service';
 import { BadRequestException } from 'src/core/response/error.response';
 import { TaskRepository } from '../repository/task.reposiroty';
@@ -10,10 +14,12 @@ import { ConfigEnum } from 'src/config/config';
 import { RedisClient } from 'src/core/cache/redis';
 import { GetTaskRepositoryType } from '../types/task.types';
 import { WorkerQueuesEnum } from 'src/worker/worker.enum';
+import { TaskStatus } from '../enums/task.enum';
 
 @Injectable()
 export class TaskService {
   static KEY_STORE_LIST_TASK = 'todo:tasks';
+  static KEY_STORE_JOB_TASK = 'todo:job:task';
 
   constructor(
     private readonly userService: UserService,
@@ -57,7 +63,7 @@ export class TaskService {
     // Clear task list cache
     await this.deleteTaskListCache(userId);
 
-    return newTask;
+    return newTask as TaskResponseDataDTO;
   }
 
   async getTasks(userId: string) {
@@ -70,13 +76,13 @@ export class TaskService {
 
     const tasks = (await this.taskRepository.getTasksByUserId(
       userId,
-    )) as GetTaskRepositoryType[];
+    )) as TaskResponseDataDTO[];
     this.logger.info('===GET TASK LIST FROM DATABASE===');
 
     // Store task list to cache
     await this.setTaskListToCache(userId, tasks);
 
-    return tasks;
+    return tasks
   }
 
   async updateTask(
@@ -115,6 +121,9 @@ export class TaskService {
     // Clear task list cache
     await this.deleteTaskListCache(userId);
 
+    // Check if the task is done
+    await this.checkMarkTaskAsDone(updatedTask.id);
+
     if (!updatedTask) {
       throw new InternalServerErrorException('UPDATE TASK FAILED');
     }
@@ -134,6 +143,10 @@ export class TaskService {
 
     // Clear task list cache
     await this.deleteTaskListCache(userId);
+
+    // Remove job from queue
+    await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_START_QUEUE);
+    await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_END_QUEUE);
     return deletedTask;
   }
 
@@ -160,7 +173,8 @@ export class TaskService {
   }
 
   async getTaskListFromCache(userId: string) {
-    return this.redis.get(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`);
+    const cachedData = await this.redis.get(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`) as TaskResponseDataDTO[];
+    return cachedData 
   }
 
   async setTaskListToCache(userId: string, tasks: GetTaskRepositoryType[]) {
@@ -171,8 +185,47 @@ export class TaskService {
     );
   }
 
+  async getJobIdByTaskId(taskId: string) {
+    return await this.redis.get(`${TaskService.KEY_STORE_JOB_TASK}:${taskId}`) as string;
+  }
+
+  async setJobIdByTaskId(taskId: string, jobId: string) {
+    return this.redis.set(
+      `${TaskService.KEY_STORE_JOB_TASK}:${taskId}`,
+      jobId,
+      0,
+    );
+  }
+
   async deleteTaskListCache(userId: string) {
     return this.redis.del(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`);
+  }
+
+  async checkMarkTaskAsDone(taskId: string) {
+    const task = await this.taskRepository.getTaskById(taskId);
+    const isOverDueDate = task.dueDate && new Date(task.dueDate) < new Date();
+    const isOverStartDate = task.startDate && new Date(task.startDate) < new Date();
+    const isMarkAsDone = task.status === TaskStatus.COMPLETED
+
+    if (isMarkAsDone && !isOverDueDate) {
+      // Remove job from queue
+      await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_END_QUEUE);
+    }
+
+    if (isMarkAsDone && !isOverStartDate) {
+      // Remove job from queue
+      await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_START_QUEUE);
+    }
+  }
+
+  async deleteJobByTaskId(taskId: string, queue: WorkerQueuesEnum) {
+    const jobId = await this.getJobIdByTaskId(taskId);
+    if (jobId) {
+      await this.workerProducer.removeJob(
+        queue,
+        jobId,
+      );
+    }
   }
 
   async sendTaskReminderEmail(taskId: string, userId: string) {
@@ -201,11 +254,12 @@ export class TaskService {
     if (gapTime > beforeTime) {
       const delayStart = gapTime - beforeTime;
       this.logger.info(`===TIME DELAY START: ${delayStart}===`);
-      this.workerProducer.produceJob(
+      const jobId = await this.workerProducer.produceJob(
         WorkerQueuesEnum.REMIND_TASK_START_QUEUE,
         dataStart,
         delayStart,
       );
+      await this.setJobIdByTaskId(taskId, jobId);
     }
 
     if (!task.dueDate) {
@@ -222,11 +276,12 @@ export class TaskService {
     if (gapTimeEnd > beforeTime) {
       const delayEnd = gapTimeEnd - beforeTime;
       this.logger.info(`===TIME DELAY END: ${delayEnd}===`);
-      this.workerProducer.produceJob(
+      const jobId = await this.workerProducer.produceJob(
         WorkerQueuesEnum.REMIND_TASK_END_QUEUE,
         dataEnd,
         delayEnd,
       );
+      await this.setJobIdByTaskId(taskId, jobId);
     }
   }
 }

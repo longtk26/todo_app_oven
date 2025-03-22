@@ -18,6 +18,7 @@ import {
   EditTaskResponseDataDTO,
   EditTaskResponseDTO,
   GetTaskResponseDTO,
+  TaskResponseDataDTO,
   UpdateTaskDTO,
 } from '../dto/task.dto';
 import { TaskService } from '../service/task.service';
@@ -43,7 +44,7 @@ export class TaskController {
     const userId = userReq.user.userId;
     const data = await this.taskService.createTask(createTaskDto, userId);
 
-    return new SuccessResponse({
+    return new SuccessResponse<TaskResponseDataDTO>({
       status: HttpStatus.CREATED,
       message: 'Tasks created',
       data: data,
@@ -60,7 +61,7 @@ export class TaskController {
   async getTasks(@Res() res: Response, @Req() userReq: UserRequest) {
     const data = await this.taskService.getTasks(userReq.user.userId);
 
-    return new SuccessResponse({
+    return new SuccessResponse<TaskResponseDataDTO[]>({
       status: HttpStatus.OK,
       message: 'Tasks found',
       data: data,

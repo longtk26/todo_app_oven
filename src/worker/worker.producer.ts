@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { WorkerQueuesEnum } from './worker.enum';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class WorkerProducer {
@@ -13,6 +14,7 @@ export class WorkerProducer {
     private remindTaskEndQueueService: Queue,
     @InjectQueue(WorkerQueuesEnum.SEND_EMAIL_VERIFICATION_QUEUE)
     private sendEmailVerificationQueueService: Queue,
+    private readonly logger: PinoLogger,
   ) {
     this.registerQueues();
   }
@@ -23,9 +25,26 @@ export class WorkerProducer {
       const queueService: Queue = this.listQueues[queue];
 
       // Add job to queue
-      await queueService.add(queue, data, { delay, removeOnComplete: true });
+      const job = await queueService.add(queue, data, { delay, removeOnComplete: true });
+
+      this.logger.info(`===Job ${job.id} added to queue ${queue}===`);
+      return job.id;
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
+      return error;
+    }
+  }
+
+  async removeJob(queue: string, jobId: string) {
+    try {
+      // Get queue service
+      const queueService: Queue = this.listQueues[queue];
+
+      // Remove job from queue
+      await queueService.remove(jobId);
+      this.logger.info(`===Job ${jobId} removed from queue ${queue}===`);
+    } catch (error) {
+      this.logger.error(error);
       return error;
     }
   }

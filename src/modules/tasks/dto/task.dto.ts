@@ -64,19 +64,19 @@ export class TaskResponseDataDTO {
   @ApiProperty()
   description: string;
   @ApiProperty({ enum: TaskPriority })
-  priority: TaskPriority;
+  priority: TaskPriority 
   @ApiProperty()
-  startDate: string;
+  startDate: Date;
   @ApiProperty()
-  dueDate: string;
+  dueDate: Date;
   @ApiProperty({ enum: TaskStatus })
   status: TaskStatus;
   @ApiProperty()
   userId: string;
   @ApiProperty()
-  createdAt: string;
+  createdAt: Date;
   @ApiProperty()
-  updatedAt: string;
+  updatedAt: Date;
 }
 
 export class EditTaskResponseDataDTO {
