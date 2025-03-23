@@ -116,7 +116,6 @@ export class UserService {
       email: userDb.email,
     };
   }
-  
 
   async verifyUserEmail(token: string) {
     // Step 1: Verify token
@@ -130,7 +129,7 @@ export class UserService {
     const data = await this.userRepository.updateUser(userId, {
       isVerified: true,
     });
-    
+
     return {
       id: data.id,
       email: data.email,
@@ -139,6 +138,13 @@ export class UserService {
   }
 
   async getUserById(userId: string) {
-    return await this.userRepository.getUserById(userId);
+    const data = await this.userRepository.getUserById(userId);
+
+    return {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      isVerified: data.isVerified,
+    };
   }
 }

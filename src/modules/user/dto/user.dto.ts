@@ -65,6 +65,20 @@ export class VerifyEmailUserResponseDataDTO {
   isVerified: boolean;
 }
 
+export class GetUserResponseDataDTO {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  isVerified: boolean;
+}
+
 export class AuthUserResponseDTO extends SuccessResponse<AuthUserResponseDataDTO> {
   @ApiProperty({ type: () => AuthUserResponseDataDTO })
   protected data: AuthUserResponseDataDTO;
@@ -78,4 +92,9 @@ export class VerifyUserResponseDTO extends SuccessResponse<VerifyUserResponseDat
 export class VerifyEmailUserResponseDTO extends SuccessResponse<VerifyEmailUserResponseDataDTO> {
   @ApiProperty({ type: () => VerifyEmailUserResponseDataDTO })
   protected data: VerifyEmailUserResponseDataDTO;
+}
+
+export class GetUserResponseDTO extends SuccessResponse<GetUserResponseDataDTO> {
+  @ApiProperty({ type: () => GetUserResponseDataDTO })
+  protected data: GetUserResponseDataDTO;
 }

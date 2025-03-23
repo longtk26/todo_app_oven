@@ -16,6 +16,8 @@ import {
   AuthUserResponseDataDTO,
   AuthUserResponseDTO,
   CreateUserDTO,
+  GetUserResponseDataDTO,
+  GetUserResponseDTO,
   SignInDTO,
   VerifyEmailUserResponseDataDTO,
   VerifyEmailUserResponseDTO,
@@ -95,6 +97,23 @@ export class UserController {
     return new SuccessResponse<VerifyEmailUserResponseDataDTO>({
       status: HttpStatus.OK,
       message: 'Email verified',
+      data: data,
+    }).send(res);
+  }
+
+  @Get('profile')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'API to get user profile',
+    type: GetUserResponseDTO,
+  })
+  @ApiBearerAuth()
+  async profile(@Res() res: Response, @Req() req: UserRequest) {
+    const data = await this.userService.getUserById(req.user.userId);
+
+    return new SuccessResponse<GetUserResponseDataDTO>({
+      status: HttpStatus.OK,
+      message: 'User profile',
       data: data,
     }).send(res);
   }

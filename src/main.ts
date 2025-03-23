@@ -25,7 +25,9 @@ async function bootstrap() {
     })
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup('api', app, documentFactory, {
+    yamlDocumentUrl: 'swagger/yaml',
+  });
 
   await app.listen(process.env.PORT ?? 3000, () => {
     // Using pino logger

@@ -17,6 +17,6 @@ import { TokenModule } from '../tokens/token.module';
 })
 export class UserModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes('user/verify');
+    consumer.apply(AuthMiddleware).forRoutes('user/verify', 'user/profile');
   }
 }
