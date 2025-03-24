@@ -16,7 +16,6 @@ import {
 import { TokenService } from 'src/modules/tokens/service/token.service';
 import { WorkerProducer } from 'src/worker/worker.producer';
 import { WorkerQueuesEnum } from 'src/worker/worker.enum';
-import { link } from 'fs';
 
 @Injectable()
 export class UserService {
