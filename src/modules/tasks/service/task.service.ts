@@ -15,6 +15,7 @@ import { RedisClient } from 'src/core/cache/redis';
 import { GetTaskRepositoryType } from '../types/task.types';
 import { WorkerQueuesEnum } from 'src/worker/worker.enum';
 import { TaskStatus } from '../enums/task.enum';
+import _ from 'lodash';
 
 @Injectable()
 export class TaskService {
@@ -63,7 +64,7 @@ export class TaskService {
     // Clear task list cache
     await this.deleteTaskListCache(userId);
 
-    return newTask as TaskResponseDataDTO;
+    return _.omitBy(newTask, _.isNil) as TaskResponseDataDTO;
   }
 
   async getTasks(userId: string) {
@@ -79,10 +80,13 @@ export class TaskService {
     )) as TaskResponseDataDTO[];
     this.logger.info('===GET TASK LIST FROM DATABASE===');
 
+    const results = tasks.map(
+      (task) => _.omitBy(task, _.isNil) as TaskResponseDataDTO,
+    );
     // Store task list to cache
-    await this.setTaskListToCache(userId, tasks);
+    await this.setTaskListToCache(userId, results);
 
-    return tasks;
+    return results;
   }
 
   async updateTask(

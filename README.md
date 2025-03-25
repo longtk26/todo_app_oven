@@ -38,6 +38,7 @@ npm i --legacy-peer-deps
 
 ### 4️⃣ Start Essential Services with Docker
 ```sh
+docker network create base-network
 docker compose -f docker-compose-dev.yml up -d
 ```
 

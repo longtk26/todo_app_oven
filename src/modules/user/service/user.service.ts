@@ -2,12 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { CreateUserDTO, SignInDTO } from '../dto/user.dto';
 import { UserRepository } from '../repository/user.repository';
-import {
-  comparePassword,
-  hashPassword,
-} from 'src/core/security/passwd.security';
 import { ConfigService } from '@nestjs/config';
-import { createAccessAndRefreshToken } from 'src/core/security/jwt.security';
 import { ConfigEnum } from 'src/config/config';
 import {
   BadRequestException,
@@ -16,6 +11,7 @@ import {
 import { TokenService } from 'src/modules/tokens/service/token.service';
 import { WorkerProducer } from 'src/worker/worker.producer';
 import { WorkerQueuesEnum } from 'src/worker/worker.enum';
+import { SecurityService } from 'src/core/security/security.service';
 
 @Injectable()
 export class UserService {
@@ -25,6 +21,7 @@ export class UserService {
     private readonly logger: PinoLogger,
     private readonly tokenService: TokenService,
     private readonly workerProducer: WorkerProducer,
+    private readonly securityService: SecurityService,
   ) {
     this.logger.setContext(UserService.name);
   }
@@ -39,7 +36,9 @@ export class UserService {
       throw new BadRequestException('USER EXISTED');
     }
     // Step 2: Create hashpasswd and save user to db
-    const hashPasswd = await hashPassword(createUserDto.password);
+    const hashPasswd = await this.securityService.hashPassword(
+      createUserDto.password,
+    );
     const newUser = await this.userRepository.createUser({
       ...createUserDto,
       password: hashPasswd,
@@ -47,10 +46,8 @@ export class UserService {
 
     // Step 3: Create accToken and refreshToken
     const payloadUser = { userId: newUser.id };
-    const { accessToken, refreshToken } = createAccessAndRefreshToken(
-      payloadUser,
-      this.config.get(ConfigEnum.SECRET_KEY),
-    );
+    const { accessToken, refreshToken } =
+      this.securityService.createAccessAndRefreshToken(payloadUser);
 
     // Step 4: return info
     return {
@@ -69,17 +66,18 @@ export class UserService {
       throw new BadRequestException('USER IS NOT EXISTED');
     }
     // Step 2: Compare hashPassword
-    const isPasswd = await comparePassword(signInDto.password, userDb.password);
+    const isPasswd = await this.securityService.comparePassword(
+      signInDto.password,
+      userDb.password,
+    );
     if (!isPasswd) {
       throw new UnauthorizedException('Credentials are invalid');
     }
 
     // Step 3: Create accToken and refreshToken
     const payloadUser = { userId: userDb.id };
-    const { accessToken, refreshToken } = createAccessAndRefreshToken(
-      payloadUser,
-      this.config.get(ConfigEnum.SECRET_KEY),
-    );
+    const { accessToken, refreshToken } =
+      this.securityService.createAccessAndRefreshToken(payloadUser);
 
     // Step 4: return info
     return {

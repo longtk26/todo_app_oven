@@ -19,3 +19,8 @@ export interface EmailConfig {
   isSecure: boolean;
   service: string;
 }
+
+export interface JwtConfig {
+  accessTokenExpires: string;
+  refreshTokenExpires: string;
+}
