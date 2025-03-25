@@ -61,10 +61,10 @@ export class TaskResponseDataDTO {
   id: string;
   @ApiProperty()
   title: string;
-  @ApiProperty()
-  description: string;
+  @ApiProperty({ required: false })
+  description?: string;
   @ApiProperty({ enum: TaskPriority })
-  priority: TaskPriority 
+  priority: TaskPriority;
   @ApiProperty()
   startDate: Date;
   @ApiProperty()

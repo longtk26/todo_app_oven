@@ -82,7 +82,7 @@ export class TaskService {
     // Store task list to cache
     await this.setTaskListToCache(userId, tasks);
 
-    return tasks
+    return tasks;
   }
 
   async updateTask(
@@ -145,8 +145,14 @@ export class TaskService {
     await this.deleteTaskListCache(userId);
 
     // Remove job from queue
-    await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_START_QUEUE);
-    await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_END_QUEUE);
+    await this.deleteJobByTaskId(
+      taskId,
+      WorkerQueuesEnum.REMIND_TASK_START_QUEUE,
+    );
+    await this.deleteJobByTaskId(
+      taskId,
+      WorkerQueuesEnum.REMIND_TASK_END_QUEUE,
+    );
     return deletedTask;
   }
 
@@ -173,8 +179,10 @@ export class TaskService {
   }
 
   async getTaskListFromCache(userId: string) {
-    const cachedData = await this.redis.get(`${TaskService.KEY_STORE_LIST_TASK}:${userId}`) as TaskResponseDataDTO[];
-    return cachedData 
+    const cachedData = (await this.redis.get(
+      `${TaskService.KEY_STORE_LIST_TASK}:${userId}`,
+    )) as TaskResponseDataDTO[];
+    return cachedData;
   }
 
   async setTaskListToCache(userId: string, tasks: GetTaskRepositoryType[]) {
@@ -186,7 +194,9 @@ export class TaskService {
   }
 
   async getJobIdByTaskId(taskId: string) {
-    return await this.redis.get(`${TaskService.KEY_STORE_JOB_TASK}:${taskId}`) as string;
+    return (await this.redis.get(
+      `${TaskService.KEY_STORE_JOB_TASK}:${taskId}`,
+    )) as string;
   }
 
   async setJobIdByTaskId(taskId: string, jobId: string) {
@@ -204,27 +214,31 @@ export class TaskService {
   async checkMarkTaskAsDone(taskId: string) {
     const task = await this.taskRepository.getTaskById(taskId);
     const isOverDueDate = task.dueDate && new Date(task.dueDate) < new Date();
-    const isOverStartDate = task.startDate && new Date(task.startDate) < new Date();
-    const isMarkAsDone = task.status === TaskStatus.COMPLETED
+    const isOverStartDate =
+      task.startDate && new Date(task.startDate) < new Date();
+    const isMarkAsDone = task.status === TaskStatus.COMPLETED;
 
     if (isMarkAsDone && !isOverDueDate) {
       // Remove job from queue
-      await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_END_QUEUE);
+      await this.deleteJobByTaskId(
+        taskId,
+        WorkerQueuesEnum.REMIND_TASK_END_QUEUE,
+      );
     }
 
     if (isMarkAsDone && !isOverStartDate) {
       // Remove job from queue
-      await this.deleteJobByTaskId(taskId, WorkerQueuesEnum.REMIND_TASK_START_QUEUE);
+      await this.deleteJobByTaskId(
+        taskId,
+        WorkerQueuesEnum.REMIND_TASK_START_QUEUE,
+      );
     }
   }
 
   async deleteJobByTaskId(taskId: string, queue: WorkerQueuesEnum) {
     const jobId = await this.getJobIdByTaskId(taskId);
     if (jobId) {
-      await this.workerProducer.removeJob(
-        queue,
-        jobId,
-      );
+      await this.workerProducer.removeJob(queue, jobId);
     }
   }
 
