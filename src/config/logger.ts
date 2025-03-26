@@ -5,7 +5,7 @@ export const specConfigsPino = {
         ? {
             target: 'pino-pretty',
             options: {
-              ignore: 'app,res',
+              ignore: 'app,req.headers,res',
             },
           }
         : undefined,
