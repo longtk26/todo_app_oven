@@ -29,29 +29,29 @@ export class CreateTaskDTO {
 
 export class UpdateTaskDTO {
   @IsOptional()
-  @ApiProperty()
+  @ApiProperty({ required: false })
   title?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ enum: TaskPriority })
+  @ApiProperty({ enum: TaskPriority, required: false })
   @IsOptional()
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsDateString()
   dueDate?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
-  @ApiProperty({ enum: TaskStatus })
+  @ApiProperty({ enum: TaskStatus, required: false })
   @IsOptional()
   status?: TaskStatus;
 }

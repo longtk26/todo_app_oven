@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { WorkerQueuesEnum } from './worker.enum';
 import { PinoLogger } from 'nestjs-pino';
@@ -25,13 +25,16 @@ export class WorkerProducer {
       const queueService: Queue = this.listQueues[queue];
 
       // Add job to queue
-      const job = await queueService.add(queue, data, { delay, removeOnComplete: true });
+      const job = await queueService.add(queue, data, {
+        delay,
+        removeOnComplete: true,
+      });
 
       this.logger.info(`===Job ${job.id} added to queue ${queue}===`);
       return job.id;
     } catch (error) {
       this.logger.error(error);
-      return error;
+      throw new InternalServerErrorException(error);
     }
   }
 
@@ -45,7 +48,7 @@ export class WorkerProducer {
       this.logger.info(`===Job ${jobId} removed from queue ${queue}===`);
     } catch (error) {
       this.logger.error(error);
-      return error;
+      throw new InternalServerErrorException(error);
     }
   }
 
