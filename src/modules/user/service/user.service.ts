@@ -33,7 +33,7 @@ export class UserService {
     );
 
     if (userDb) {
-      throw new BadRequestException('USER EXISTED');
+      throw new BadRequestException('User existed!');
     }
     // Step 2: Create hashpasswd and save user to db
     const hashPasswd = await this.securityService.hashPassword(
@@ -63,7 +63,7 @@ export class UserService {
     const userDb = await this.userRepository.getUserByEmail(signInDto.email);
 
     if (!userDb) {
-      throw new BadRequestException('USER IS NOT EXISTED');
+      throw new BadRequestException('Credentials are invalid');
     }
     // Step 2: Compare hashPassword
     const isPasswd = await this.securityService.comparePassword(
