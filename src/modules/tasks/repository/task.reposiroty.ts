@@ -30,6 +30,9 @@ export class TaskRepository {
       where: {
         userId,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return tasks;

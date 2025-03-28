@@ -28,6 +28,7 @@ export class MailService {
         to: [payload.to],
         subject: payload.subject,
         text: payload.content,
+        html: payload.html,
       });
       this.logger.info(`Email sent to ${payload.to}`);
     } catch (error) {
