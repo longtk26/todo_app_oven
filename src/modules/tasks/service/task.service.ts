@@ -163,13 +163,13 @@ export class TaskService {
   async validateStartAndDueDate(startDate: string, dueDate: string) {
     if (startDate) {
       if (new Date(startDate) < new Date()) {
-        throw new BadRequestException('START DATE MUST BE IN THE FUTURE');
+        throw new BadRequestException('Start date must be in the future.');
       }
     }
 
     if (startDate && dueDate) {
       if (new Date(startDate) > new Date(dueDate)) {
-        throw new BadRequestException('START DATE MUST BE BEFORE DUE DATE');
+        throw new BadRequestException('Start date must be before due date.');
       }
     }
   }

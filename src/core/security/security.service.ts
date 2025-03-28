@@ -47,7 +47,7 @@ export class SecurityService {
     try {
       return await bcrypt.hash(
         password,
-        this.config.get(ConfigEnum.SALT_ROUNDS),
+        parseInt(this.config.get(ConfigEnum.SALT_ROUNDS)),
       );
     } catch (error) {
       console.log(`Error hash password: ${error.message}`);
