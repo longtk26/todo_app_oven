@@ -103,7 +103,7 @@ export class UserService {
       WorkerQueuesEnum.SEND_EMAIL_VERIFICATION_QUEUE,
       {
         email: userDb.email,
-        link: `${this.config.get(ConfigEnum.CLIENT_URL)}/user/verify-email?token=${token}`,
+        link: `${this.config.get(ConfigEnum.CLIENT_URL)}/verify-email?token=${token}`,
       },
       0, // Not delay
     );
