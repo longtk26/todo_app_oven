@@ -4,6 +4,8 @@ migratedown:
 	npx prisma migrate reset
 migrateup:
 	npx prisma db push
+migratedev:
+	npx prisma migrate dev
 migratepull:
 	npx prisma db pull
 
