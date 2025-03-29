@@ -1,12 +1,13 @@
 model User {
-  id        String  @id @default(uuid()) 
-  name      String  
-  email     String  @unique 
-  password  String  
-  tasks     Task[]  
-  isVerified Boolean @default(false)
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt
+  id         String    @id @default(uuid())
+  name       String
+  email      String    @unique
+  password   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isVerified Boolean   @default(false)
+  deletedAt  DateTime?
+  tasks      Task[]
 
   @@map("users")
 }
