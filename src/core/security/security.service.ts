@@ -4,7 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import { ConfigEnum } from 'src/config/config';
 import { JwtConfig } from 'src/config/interface';
 import { UserPayloadJWT } from 'src/modules/user/interface/user.interface';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class SecurityService {

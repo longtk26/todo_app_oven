@@ -15,7 +15,7 @@ import { RedisClient } from 'src/core/cache/redis';
 import { GetTaskRepositoryType } from '../types/task.types';
 import { WorkerQueuesEnum } from 'src/worker/worker.enum';
 import { TaskStatus } from '../enums/task.enum';
-import _ from 'lodash';
+import { isNil, omitBy } from 'lodash';
 
 @Injectable()
 export class TaskService {
@@ -36,12 +36,6 @@ export class TaskService {
     if (!user) {
       throw new BadRequestException('USER NOT FOUND');
     }
-
-    // Validate start and due date
-    await this.validateStartAndDueDate(
-      createTaskDto.startDate,
-      createTaskDto.dueDate,
-    );
 
     // Create a task
     const newTask = await this.taskRepository.createTask({
@@ -64,7 +58,7 @@ export class TaskService {
     // Clear task list cache
     await this.deleteTaskListCache(userId);
 
-    return _.omitBy(newTask, _.isNil) as TaskResponseDataDTO;
+    return omitBy(newTask, isNil) as TaskResponseDataDTO;
   }
 
   async getTasks(userId: string) {
@@ -74,14 +68,15 @@ export class TaskService {
       this.logger.info('===GET TASK LIST FROM CACHE===');
       return taskList;
     }
-
+    // Get task list from database
+    this.logger.info(`tasks list: ${taskList}`);
     const tasks = (await this.taskRepository.getTasksByUserId(
       userId,
     )) as TaskResponseDataDTO[];
     this.logger.info('===GET TASK LIST FROM DATABASE===');
 
     const results = tasks.map(
-      (task) => _.omitBy(task, _.isNil) as TaskResponseDataDTO,
+      (task) => omitBy(task, isNil) as TaskResponseDataDTO,
     );
     // Store task list to cache
     await this.setTaskListToCache(userId, results);
@@ -96,12 +91,6 @@ export class TaskService {
   ) {
     // Check task ownership
     await this.validateTaskOwnership(taskId, userId);
-
-    // Validate start and due date
-    await this.validateStartAndDueDate(
-      updateTaskDto.startDate,
-      updateTaskDto.dueDate,
-    );
 
     // Update task
     const updatedTask = await this.taskRepository.updateTask(

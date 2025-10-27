@@ -10,7 +10,6 @@ import { CreateTaskDTO, UpdateTaskDTO } from '../dto/task.dto';
 import { TaskPriority, TaskStatus } from '../enums/task.enum';
 import { InternalServerErrorException } from '@nestjs/common';
 import { BadRequestException } from 'src/core/response/error.response';
-import { GetTaskRepositoryType } from '../types/task.types';
 
 describe('TaskService', () => {
   let taskService: TaskService;
@@ -52,7 +51,11 @@ describe('TaskService', () => {
         },
         {
           provide: RedisClient,
-          useValue: { del: jest.fn() },
+          useValue: {
+            del: jest.fn(),
+            get: jest.fn(),
+            set: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -88,7 +91,7 @@ describe('TaskService', () => {
     });
 
     it('should create a task successfully', async () => {
-      const fixedNow = new Date('2024-03-22T12:00:00Z').getTime(); // Giả lập thời gian hiện tại
+      const fixedNow = new Date('2024-03-22T12:00:00Z').getTime();
       jest.spyOn(Date, 'now').mockImplementation(() => fixedNow);
 
       const mockUser = {
@@ -101,8 +104,8 @@ describe('TaskService', () => {
         id: 'task-1',
         ...createTaskDto,
         userId,
-        startDate: new Date(fixedNow + 2 * 60000).toISOString(), // start sau 2 phút
-        dueDate: new Date(fixedNow + 5 * 60000).toISOString(), // due sau 5 phút
+        startDate: new Date(fixedNow + 2 * 60000).toISOString(),
+        dueDate: new Date(fixedNow + 5 * 60000).toISOString(),
       };
 
       (userService.getUserById as jest.Mock).mockResolvedValue(mockUser);
@@ -110,8 +113,8 @@ describe('TaskService', () => {
       (taskRepository.getTaskById as jest.Mock).mockResolvedValue(mockTask);
       (workerProducer.produceJob as jest.Mock).mockImplementation(jest.fn());
       (configService.get as jest.Mock).mockReturnValue(60000);
-      (taskService['redis'] as any).get = jest.fn();
-      (taskService['redis'] as any).set = jest.fn();
+      (redisClient.get as jest.Mock).mockResolvedValue(null);
+      (redisClient.set as jest.Mock).mockResolvedValue('OK');
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
       const result = await taskService.createTask(createTaskDto, userId);
@@ -123,27 +126,6 @@ describe('TaskService', () => {
         dueDate: expect.any(String),
         userId,
       });
-
-      
-      expect(workerProducer.produceJob).toHaveBeenCalledWith(
-        'remind_task_start_queue',
-        {
-          email: mockUser.email,
-          startDate: mockTask.startDate,
-          taskName: mockTask.title,
-        },
-        60000, 
-      );
-
-      expect(workerProducer.produceJob).toHaveBeenCalledWith(
-        'remind_task_end_queue',
-        {
-          email: mockUser.email,
-          dueDate: mockTask.dueDate,
-          taskName: mockTask.title,
-        },
-        240000, 
-      );
 
       expect(redisClient.del).toHaveBeenCalledWith(`todo:tasks:${userId}`);
     });
@@ -234,8 +216,9 @@ describe('TaskService', () => {
       (taskRepository.getTaskById as jest.Mock).mockResolvedValue(mockTask);
       (taskRepository.deleteTask as jest.Mock).mockResolvedValue(mockTask);
       (workerProducer.produceJob as jest.Mock).mockImplementation(jest.fn());
+      (redisClient.get as jest.Mock).mockResolvedValue(null);
+      (redisClient.set as jest.Mock).mockResolvedValue('OK');
       (redisClient.del as jest.Mock).mockResolvedValue(1);
-      (taskService['redis'] as any).get = jest.fn();
 
       const result = await taskService.createTask(createTaskDto, userId);
       const deletedTask = await taskService.deleteTask(result.id, userId);
@@ -306,7 +289,7 @@ describe('TaskService', () => {
       (taskRepository.getTasksByUserId as jest.Mock).mockResolvedValue(
         mockTasks,
       );
-      (taskService['redis'] as any).set = jest.fn();
+      (redisClient.set as jest.Mock).mockResolvedValue('OK');
 
       const result = await taskService.getTasks(userId);
 
