@@ -60,6 +60,7 @@ export class UserService {
 
   async signIn(signInDto: SignInDTO) {
     // Step 1: Check user exist in db
+
     const userDb = await this.userRepository.getUserByEmail(signInDto.email);
 
     if (!userDb) {
@@ -103,7 +104,7 @@ export class UserService {
       WorkerQueuesEnum.SEND_EMAIL_VERIFICATION_QUEUE,
       {
         email: userDb.email,
-        link: `${this.config.get(ConfigEnum.CLIENT_URL)}/verify-email?token=${token}`,
+        link: `${this.config.get(ConfigEnum.CLIENT_URL)}/user/verify-email?token=${token}`,
       },
       0, // Not delay
     );

@@ -1,12 +1,12 @@
 newmg:
-	npx prisma migrate dev --name $(name)
+	prisma migrate dev --name $(name)
 migratedown:
-	npx prisma migrate reset
+	prisma migrate reset  
 migrateup:
-	npx prisma db push
+	prisma db push
 migratedev:
-	npx prisma migrate dev
+	prisma migrate dev
 migratepull:
-	npx prisma db pull
+	prisma db pull
 
-.PHONY: newmg migratedown migratepull migrateup
+.PHONY: newmg migratedown migratepull migrateup migratedev
