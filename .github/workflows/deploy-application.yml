@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 jobs:
-  run_deploy:
+  build:
     name: run_deploy / aws-docker-build
     runs-on: ubuntu-latest
 
@@ -77,3 +77,72 @@ jobs:
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
 
+  deploy:
+    name: run_deploy / aws-docker-deploy
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Deploy to EC2
+      env:
+        EC2_USER: ${{ secrets.EC2_USER }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
+        CONTAINER_NAME: todo-stg-be
+        NETWORK_NAME: app-network
+      run: |
+        ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+          # Login to ECR
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          
+          # Create Docker network if it doesn't exist
+          if ! docker network ls | grep -q ${{ env.NETWORK_NAME }}; then
+            echo "Creating Docker network: ${{ env.NETWORK_NAME }}"
+            docker network create ${{ env.NETWORK_NAME }}
+          fi
+          
+          # Pull the latest image
+          docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          
+          # Stop and remove old container if exists
+          if docker ps -a | grep -q ${{ env.CONTAINER_NAME }}; then
+            echo "Stopping existing container..."
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
+          fi
+          
+          # Run new container in the network
+          docker run -d \
+            --name ${{ env.CONTAINER_NAME }} \
+            --network ${{ env.NETWORK_NAME }} \
+            --restart unless-stopped \
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          
+          # Clean up old images
+          docker image prune -f
+          
+          echo "Deployment completed successfully!"
+        EOF
