@@ -52,10 +52,10 @@ jobs:
       
     - name: Setup environment variables from Secret Manager
       env:
-        AWS_SECRETS_SOURCE: ${{ secrets.AWS_SECRETS_SOURCE }}
+        AWS_SECRETS_NAME: ${{ secrets.AWS_SECRETS_NAME }}
         AWS_REGION: ${{ env.AWS_REGION }}
       run: |
-        python todo_app_oven/scripts/setup-env.py
+        python scripts/setup-env.py
         # Load the .env file into GitHub Actions environment
         if [ -f .env ]; then
           cat .env >> $GITHUB_ENV
