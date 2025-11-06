@@ -113,33 +113,45 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
         CONTAINER_NAME: todo-stg-be
         NETWORK_NAME: app-network
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ env.AWS_REGION }}
       run: |
-        ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+        ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST \
+          "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+           AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+           AWS_REGION=$AWS_REGION \
+           ECR_REGISTRY=$ECR_REGISTRY \
+           ECR_REPOSITORY=$ECR_REPOSITORY \
+           IMAGE_TAG=$IMAGE_TAG \
+           CONTAINER_NAME=$CONTAINER_NAME \
+           NETWORK_NAME=$NETWORK_NAME" \
+          bash << 'EOF'
           # Login to ECR
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
           
           # Create Docker network if it doesn't exist
-          if ! docker network ls | grep -q ${{ env.NETWORK_NAME }}; then
-            echo "Creating Docker network: ${{ env.NETWORK_NAME }}"
-            docker network create ${{ env.NETWORK_NAME }}
+          if ! docker network ls | grep -q $NETWORK_NAME; then
+            echo "Creating Docker network: $NETWORK_NAME"
+            docker network create $NETWORK_NAME
           fi
           
           # Pull the latest image
-          docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
           # Stop and remove old container if exists
-          if docker ps -a | grep -q ${{ env.CONTAINER_NAME }}; then
+          if docker ps -a | grep -q $CONTAINER_NAME; then
             echo "Stopping existing container..."
-            docker stop ${{ env.CONTAINER_NAME }} || true
-            docker rm ${{ env.CONTAINER_NAME }} || true
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
           fi
           
           # Run new container in the network
           docker run -d \
-            --name ${{ env.CONTAINER_NAME }} \
-            --network ${{ env.NETWORK_NAME }} \
+            --name $CONTAINER_NAME \
+            --network $NETWORK_NAME \
             --restart unless-stopped \
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
           # Clean up old images
           docker image prune -f
