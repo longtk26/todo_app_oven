@@ -113,21 +113,17 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
         CONTAINER_NAME: todo-stg-be
         NETWORK_NAME: app-network
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ env.AWS_REGION }}
       run: |
         ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST \
-          "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-           AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-           AWS_REGION=$AWS_REGION \
-           ECR_REGISTRY=$ECR_REGISTRY \
+          "ECR_REGISTRY=$ECR_REGISTRY \
            ECR_REPOSITORY=$ECR_REPOSITORY \
            IMAGE_TAG=$IMAGE_TAG \
            CONTAINER_NAME=$CONTAINER_NAME \
-           NETWORK_NAME=$NETWORK_NAME" \
+           NETWORK_NAME=$NETWORK_NAME \
+           AWS_REGION=$AWS_REGION" \
           bash << 'EOF'
-          # Login to ECR
+          # Login to ECR 
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
           
           # Create Docker network if it doesn't exist
